@@ -29,6 +29,6 @@ export const routes = {
     '/tournament/brackets': TournamentBracketView,
     '/tournament/podium': TournamentPodiumView,
     '/create-room': CreateRoomView,
-    '/game-room': GameRoomView,
+    '/room': GameRoomView,
     '/404': NotFoundView
 };

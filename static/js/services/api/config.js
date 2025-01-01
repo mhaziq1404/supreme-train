@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-    BASE_URL: 'https://burro-polished-evenly.ngrok-free.app/api',
+    BASE_URL: 'http://localhost:8000/api',
     VERSION: 'v1',
     ENDPOINTS: {
         AUTH: '/auth',

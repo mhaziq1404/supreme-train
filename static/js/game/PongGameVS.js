@@ -1,62 +1,46 @@
 import * as THREE from 'https://unpkg.com/three@latest/build/three.module.js';
 
-export function initPongGameVS(player1 = null, player2 = null, socketuser = null) {
+export function initPongGameVS(player1 = null, player2 = null, socketuser = null, roomid = 0) {
     // Game state
     console.log("PONG GAME VS INITIALISE");
-    let isTournament = false;
-    if (player1 != null && player2 != null) isTournament = true;
 
     const state = {
         paused: false,
         gameOver: false,
         scores: { player1: 0, player2: 0 },
         paddleSpeed: 0.1,
-        ballSpeed: { x: 0, y: 0 },
-        type: 'state_update'
+        ballSpeed: { x: 0, y: 0 }
     };
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    let socket = new WebSocket(wsProtocol + window.location.host + `/ws/api/pong/?token=${token}`);
+    let socket = new WebSocket(wsProtocol + window.location.host + `/ws/api/pong/${roomid}/?token=${token}`);
 
-    // WebSocket Event Handlers
     socket.onerror = function(error) {
         console.error('WebSocket error:', error);
     };
 
     socket.onopen = function() {
-        console.log('WebSocket connection established');
+        console.log('Pong game WebSocket connection established');
     };
 
     socket.onclose = function(e) {
         console.log('Socket closed. Reconnecting in 1 second.', e.reason);
         setTimeout(() => {
-            socket = new WebSocket(wsProtocol + window.location.host + `/ws/api/pong/?token=${token}`);
+            socket = new WebSocket(wsProtocol + window.location.host + `/ws/api/pong/${roomid}/?token=${token}`);
         }, 1000);
-    };
-
-    socket.onopen = () => {
-        console.log('WebSocket connected');
     };
                 
     socket.onmessage = function(e) {
         try {
             const data = JSON.parse(e.data);
-    
             if (data.type === 'start_game') {
+                console.log('game started.....')
+                resetGame();
+                animate();
                 resetBall(1);
             } else if (data.type === 'score_update') {
                 document.getElementById('vsplayer1Score').textContent = data.scores.player1;
                 document.getElementById('vsplayer2Score').textContent = data.scores.player2;
-                // player1Score = data.player1_score;
-                // player2Score = data.player2_score;
-            } else if (data.type === 'state_update') {
-                if (data.paddle1 && data.paddle2 && data.ball && 'ball_angle' in data) {
-                    paddle1.position.y = data.paddle1.y;
-                    paddle2.position.y = data.paddle2.y;
-                    ball.position.x = data.ball.x;
-                    ball.position.y = data.ball.y;
-                    ball_angle = data.ball_angle;
-                }
             } else if (data.type === 'ball_update') {
                 ball.position.x = data.ball.x;
                 ball.position.y = data.ball.y;
@@ -203,7 +187,6 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
             return ;
         if (socketuser != player1)
             return ;
-        
         ball.position.x += state.ballSpeed.x;
         ball.position.y += state.ballSpeed.y;
         const gamestateball = {
@@ -372,8 +355,4 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
-
-    // Reset the game and start the animation
-    resetGame();
-    animate();
 }

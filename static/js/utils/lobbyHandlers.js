@@ -54,7 +54,7 @@ export function initLobbyHandlers() {
     async function handleJoinRoom(roomId) {
         try {
             await roomService.joinRoom(roomId);
-            window.location.href = '#/game-room';
+            window.location.href = '#/room';
         } catch (error) {
             console.error('Error joining room:', error);
         }

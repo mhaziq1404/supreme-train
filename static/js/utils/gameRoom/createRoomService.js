@@ -3,8 +3,8 @@ import { roomService } from '../../services/api/roomService.js';
 export async function createRoom(formData) {
   // Transform form data into the expected API format
   const roomData = {
-    name: formData.get('roomName'),
-    type: formData.get('gameMode'),
+    name: formData.get('room'),
+    type: formData.get('type'),
     maxPlayers: parseInt(formData.get('maxPlayers'), 10),
     settings: {
       powerUps: formData.get('powerUps') === 'on',

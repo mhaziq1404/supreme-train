@@ -66,7 +66,7 @@ function generateRoomsList(rooms) {
                         <div class="mb-1">${room.players.length}/${room.maxPlayers}</div>
                         <small class="text-muted">${room.status}</small>
                     </div>
-                    <a href="#/game-room" >
+                    <a href="#/room" >
                     <button class="btn btn-primary btn-sm join-room-btn">
                         ${room.status === "Waiting" ? "Join" : "Spectate"}
                     </button>
