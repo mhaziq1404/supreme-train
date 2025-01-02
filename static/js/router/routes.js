@@ -13,6 +13,7 @@ import { TournamentBracketView } from '../views/TournamentBracketView.js';
 import { TournamentPodiumView } from '../views/TournamentPodiumView.js';
 import { CreateRoomView } from '../views/CreateRoomView.js';
 import { GameRoomView } from '../views/GameRoomView.js';
+import { FriendsView } from '../views/FriendsView.js';
 
 export const routes = {
     '/': HomeView,
@@ -30,5 +31,6 @@ export const routes = {
     '/tournament/podium': TournamentPodiumView,
     '/create-room': CreateRoomView,
     '/game-room': GameRoomView,
+    '/friends': FriendsView,
     '/404': NotFoundView
 };

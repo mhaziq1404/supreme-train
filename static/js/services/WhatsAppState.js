@@ -1,4 +1,5 @@
 import { chatService } from '../services/chat/chatService.js';
+import { userService } from './api/userService.js';
 import { authService } from './api/authService.js';
 import { webSocketService } from '../services/websocket/WebSocketService.js';
 import { createChatMessageHandler } from '../services/chat/ChatMessageHandler.js';
@@ -15,15 +16,16 @@ export class WhatsAppState {
 
   async initialize() {
     try {
-      const mockChats = await chatService.getChats();
       const user = await authService.getCurrentUser();
 
-      this.userId = user.id;
-      console.log('Current user:', user.id, user.username);
+      const savedChats = localStorage.getItem('chats');
+      if (savedChats) {
+        const parsedArray = JSON.parse(savedChats);
+        this.chats = new Map(parsedArray);
+      }
 
-      mockChats.forEach(chat => {
-        this.chats.set(chat.id, chat);
-      });
+      this.userId = user.id;
+      //console.log('Current user:', user.id, user.username);
 
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -44,6 +46,8 @@ export class WhatsAppState {
   }
 
   addNewChat(userId, userName = 'New User', avatar = '') {
+
+    console.log('addNewCvrevhat', userId, userName);
     if (this.chats.has(userId)) {
       console.warn(`Chat with userId: ${userId} already exists.`);
       this.selectedChat = userId;
@@ -63,8 +67,8 @@ export class WhatsAppState {
     });
 
     this.selectedChat = userId;
-    this.notify();
-    //console.log(`Created new chat with userId: ${userId}`);
+    this.savechat();
+    console.log(`Created new chat with userId: ${userId}`);
   }
 
   notify() {
@@ -82,7 +86,7 @@ export class WhatsAppState {
 
     const chat = Array.from(this.chats.values()).find(chat => chat.id === this.selectedChat);
 
-    console.log('Selected chat:', chat);
+    //console.log('Selected chat:', chat);
     if (!chat) return null;
 
     const message = {
@@ -96,16 +100,12 @@ export class WhatsAppState {
     chat.messages.push(message);
     this.notify();
 
-
-    //console.log('Overall chats:');
-    this.chats.forEach((chat, id) => {
-        //console.log(`Chat ID: ${id}`, chat);
-    });
-
     // this.syncWithBackend();
         
     const recipientId = chat.user.id;
     this.messageHandler.sendMessage(recipientId, content);
+
+    this.savechat();
 
     return message;
   }
@@ -122,8 +122,12 @@ export class WhatsAppState {
     return this.selectedChat ? Array.from(this.chats.values()).find(chat => chat.id === this.selectedChat) : null;
   }
 
+  savechat() {
+    const chatsArray = Array.from(this.chats.entries());
+    localStorage.setItem('chats', JSON.stringify(chatsArray));
+  }
+
   destroy() {
     webSocketService.disconnect();
   }
 }
-

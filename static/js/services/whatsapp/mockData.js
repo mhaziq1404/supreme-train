@@ -56,3 +56,13 @@ export const mockMessages = [
         status: 'delivered'
     }
 ];
+
+export const mockReplies = [
+    "I'll join you for a game!",
+    "Sure, let's play!",
+    "Give me 5 minutes",
+    "Ready when you are!",
+    "Good game!",
+    "Maybe later, busy right now",
+    "Thanks for the invite!"
+];

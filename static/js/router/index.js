@@ -4,6 +4,7 @@ import { requireAuth } from './guards.js';
 import { TournamentBracketView } from '../views/TournamentBracketView.js';
 import { displayGameSection, hideGameSection } from '../main.js';
 import { PongGameVSView } from '../views/PongGameVSView.js';
+import { PlayerProfileView } from '../views/PlayerProfileView.js';
 
 export class Router {
     constructor(rootElement) {
@@ -134,6 +135,31 @@ export class Router {
                 return;
             }
         }
+
+        if (path.includes('/userprofile')) {
+            const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+            let userId = urlParams.get('userid');
+
+            if (userId){
+                this.root.innerHTML = LoadingSpinner();
+            
+            try {
+                const view = await PlayerProfileView(userId);
+                hideGameSection();
+                this.root.innerHTML = view;
+            } catch (error) {
+                console.error('Route error:', error);
+                this.root.innerHTML = `
+                <div class="alert alert-danger">
+                    Error loading profile view: ${error.message}
+                </div>
+                `;
+            }
+            return;
+            }
+        }
+
+
 
         const route = routes[path] || routes['/404'];
         

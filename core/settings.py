@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'chat_app',
     'room_app',
     'pong_app',
+    'blockchain_app',
     'spa',
     'channels',
 ]

@@ -12,8 +12,9 @@ User = get_user_model()
 
 class ChatroomConsumer(WebsocketConsumer):
     """
-    A synchronous consumer using group messaging. Once connected, 
-    it adds the user to a channel group named after chatroom_name.
+    A synchronous consumer using group messaging. Once connected,
+    it adds the user to a channel group named after chatroom_name,
+    and also to a user-specific group named `user_<user_id>`.
     """
 
     def connect(self):
@@ -22,14 +23,23 @@ class ChatroomConsumer(WebsocketConsumer):
             # Extract the chatroom_name from the URL route (see routing.py)
             self.chatroom_name = self.scope['url_route']['kwargs']['chatroom_name']
 
+            # User-specific group name
+            self.user_group_name = f"user_{self.user.id}"
+
             print(f"User {self.user.username} connected to chatroom {self.chatroom_name}")
 
-            # Optional: create a more specific group name, e.g. f"chat_{self.chatroom_name}"
-            # but here we just use chatroom_name directly
+            # Add this user to the chatroom group
             async_to_sync(self.channel_layer.group_add)(
                 self.chatroom_name,
                 self.channel_name
             )
+
+            # Add this user to their own group (for direct messages)
+            async_to_sync(self.channel_layer.group_add)(
+                self.user_group_name,
+                self.channel_name
+            )
+
             self.accept()
         else:
             # If user is not authenticated or token is invalid, close the socket
@@ -37,39 +47,61 @@ class ChatroomConsumer(WebsocketConsumer):
 
     def disconnect(self, close_code):
         """
-        Called when the socket disconnects. We remove the user from the group.
+        Called when the socket disconnects. We remove the user from both groups.
         """
         if self.user and self.user.is_authenticated:
             async_to_sync(self.channel_layer.group_discard)(
                 self.chatroom_name,
                 self.channel_name
             )
+            async_to_sync(self.channel_layer.group_discard)(
+                self.user_group_name,
+                self.channel_name
+            )
 
     def receive(self, text_data):
         """
-        Triggered when a message is received from this client. 
-        We'll broadcast it to the entire group.
+        Triggered when a message is received from this client.
+        If a recipient_id is specified, we send only to that user’s group.
+        Otherwise, broadcast to the entire chatroom group.
         """
         text_data_json = json.loads(text_data)
-        message = text_data_json.get('message', '')
-        print(message)
+        print(f"Received data: {text_data_json}")
+        message_text = text_data_json.get('message', '')
+        data = message_text.get('data', '')
+        print(f"Received data: {data}")
+        recipient_id = data.get('recipientId')
+        print(f"Received message: {recipient_id}")
+
+        # Construct the message payload
         message = {
-            'data': text_data_json.get('message', ''),
+            'data': message_text,
             'senderId': self.user.id,
             'senderName': self.user.username
         }
 
-        async_to_sync(self.channel_layer.group_send)(
-            self.chatroom_name,
-            {
-                "type": "chat_message",
-                "message": message,
-            }
-        )
+        if recipient_id:
+            # Send only to the specific user group
+            async_to_sync(self.channel_layer.group_send)(
+                f"user_{recipient_id}",
+                {
+                    "type": "chat_message",
+                    "message": message,
+                }
+            )
+        else:
+            # Broadcast to the entire chatroom
+            async_to_sync(self.channel_layer.group_send)(
+                self.chatroom_name,
+                {
+                    "type": "chat_message",
+                    "message": message,
+                }
+            )
 
     def chat_message(self, event):
         """
-        Handler for messages broadcast to the group; 
+        Handler for messages broadcast to the group (or user-specific group);
         it sends the message payload to the frontend via WebSocket.
         """
         message = event['message']

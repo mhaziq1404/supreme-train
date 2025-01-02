@@ -1,5 +1,6 @@
 export const API_CONFIG = {
-    BASE_URL: 'http://burro-polished-evenly.ngrok-free.app/api',
+    // BASE_URL: 'https://burro-polished-evenly.ngrok-free.app/api',
+    BASE_URL: 'http://localhost:8000/api',
     ENDPOINTS: {
         TOURNAMENTS: '/tournaments',
         MATCHES: '/matches',

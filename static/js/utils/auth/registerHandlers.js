@@ -50,7 +50,7 @@ export function initRegisterHandlers() {
 
             // Redirect to login page
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = '#/login';
             }, 1500);
 
         } catch (error) {

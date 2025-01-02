@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
     total_matches = models.IntegerField(default=0)
     wins = models.IntegerField(default=0)
     points = models.IntegerField(default=0)
+    status = models.CharField(max_length=50, default='Offline')
     avatar = models.URLField(default='https://via.placeholder.com/150')
 
     chat_group = models.ManyToManyField('chat_app.ChatGroup', blank=True)

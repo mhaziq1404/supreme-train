@@ -133,7 +133,7 @@ export async function apiDelete(endpoint) {
         return mockResponse(endpoint, 'DELETE');
     }
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/${API_CONFIG.VERSION}${endpoint}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
         method: 'DELETE',
         headers: {
             ...defaultHeaders,

@@ -10,7 +10,7 @@ export async function ProfileView() {
 
     try {
         // Load all profile sections concurrently
-        const [header, stats, matches, ranking, achievements] = await Promise.all([
+        const [header, stats, matches] = await Promise.all([
             ProfileHeader(),
             ProfileStats(),
             RecentMatches(),

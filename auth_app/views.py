@@ -17,6 +17,10 @@ class LoginView(APIView):
     def post(self, request):
         from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+        try:
+            user = User.objects.get(email=request.data.get('email'))
+        except User.DoesNotExist:
+            return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
         username = User.objects.get(email=request.data.get('email')).username
         data = {'username': username, 'password': request.data.get('password')}
 

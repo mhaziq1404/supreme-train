@@ -1,8 +1,9 @@
-// --- PlayersList.js ---
+
 
 import { userService } from '../../../services/api/userService.js';
 import { LoadingSpinner } from '../../../components/LoadingSpinner.js';
 import { initWhatsAppHandlers } from '../../../utils/whatsapp/whatsAppHandlers.js';
+import { initFriendHandlers } from '../../../utils/friends/friendHandlers.js';
 
 export async function PlayersList() {
     const container = document.createElement('div');
@@ -25,6 +26,7 @@ export async function PlayersList() {
 
         // Initialize message handlers
         setTimeout(() => initWhatsAppHandlers(), 0);
+        setTimeout(() => initFriendHandlers(), 0);
     } catch (error) {
         container.innerHTML = `
             <div class="alert alert-danger">
@@ -72,7 +74,7 @@ function generatePlayersList(players) {
                     </div>
                 </div>
                 <div class="dropdown">
-                    <button class="btn btn-light btn-sm">
+                    <button data-add-friend="${player.id}" class="btn btn-light btn-sm">
                         <i class="bi bi-person-plus"></i>
                     </button>
                     <button class="btn btn-light btn-sm"

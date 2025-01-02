@@ -14,6 +14,8 @@ class OnlineConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.get_user_from_jwt()
         if self.user and self.user.is_authenticated:
+            self.user.status = 'Online'
+            self.user.save()
             OnlineConsumer.online_users.add(self.user.username)
             self.accept()
         else:
@@ -21,6 +23,8 @@ class OnlineConsumer(WebsocketConsumer):
 
     def disconnect(self, close_code):
         if self.user and self.user.is_authenticated:
+            self.user.status = 'Offline'
+            self.user.save()
             OnlineConsumer.online_users.discard(self.user.username)
 
     def receive(self, text_data):
