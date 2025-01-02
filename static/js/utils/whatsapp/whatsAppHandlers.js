@@ -1,6 +1,7 @@
 import { WhatsAppState } from '../../services/WhatsAppState.js';
 import { Message } from '../../views/components/whatsapp/Message.js';
 import { ChatItem } from '../../views/components/whatsapp/ChatItem.js';
+import { blockingService } from '../../services/chat/BlockingService.js';
 
 const whatsAppState = new WhatsAppState();
 
@@ -18,24 +19,54 @@ export async function initWhatsAppHandlers() {
     const searchInput = document.getElementById('searchMessages');
     const chatHeader = document.querySelector('.chat-header');
 
+    // Handle block/unblock user
     document.addEventListener('click', (e) => {
+        // Handle block toggling
+        const blockBtn = e.target.closest('#toggleBlockBtn');
+        if (blockBtn && !blockBtn.disabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          // Disable the button so it doesn't run again
+          blockBtn.disabled = true;
+      
+          const selectedChat = whatsAppState.getSelectedChat();
+          if (selectedChat) {
+            //console.log('Toggle block for:', selectedChat.id);
+            const isNowBlocked = blockingService.toggleBlock(selectedChat.id);
+            updateChatHeader();
+            //console.log('User is now blocked:', isNowBlocked);
+            showBlockingToast(selectedChat.user.name, isNowBlocked);
+            setTimeout(() => {
+                blockBtn.disabled = false;
+            }, 2000);
+          }
+        }
+      
+        // Handle new chat messages
         const messageBtn = e.target.closest('[data-message-user]');
         if (messageBtn) {
-            const userId = messageBtn.dataset.messageUser;
-            const userName = messageBtn.dataset.userName;
-            startNewChat(userId, userName);
+          e.preventDefault();
+          e.stopPropagation();
+          messageBtn.disabled = true;
+      
+          const userId = messageBtn.dataset.messageUser;
+          const userName = messageBtn.dataset.userName;
+          console.log('Start chat with:', userId, userName);
+          startNewChat(userId, userName);
+          setTimeout(() => {
+            messageBtn.disabled = false;
+          }, 2000);
         }
-    });
-    
+      });
+      
+
     function startNewChat(userId, userName) {
-    
         if (whatsAppState.getChat(userId)) {
             whatsAppState.selectChat(userId);
         } else {
             whatsAppState.addNewChat(userId, userName);
         }
     
-        // Navigate to the WhatsApp view (or wherever your chat UI is located)
         window.location.hash = '#/whatsapp';
     
         let attemptCount = 0;
@@ -66,6 +97,8 @@ export async function initWhatsAppHandlers() {
                     return;
                 }
     
+                // Note: The "Block/Unblock User" text is handled in updateChatHeader()
+                // but we can also handle it here if you prefer.
                 chatHeader.innerHTML = `
                     <div class="d-flex align-items-center p-3">
                         <img
@@ -90,6 +123,11 @@ export async function initWhatsAppHandlers() {
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
+                                    <a class="dropdown-item" id="viewProfile" href="#/userprofile?userid=${selectedChat.user.id}">
+                                        <i class="bi bi-person-circle me-2"></i>View Profile
+                                    </a>
+                                </li>
+                                <li>
                                     <button class="dropdown-item" id="toggleBlockBtn">
                                         <i class="bi bi-slash-circle me-2"></i>
                                         <span>Block User</span>
@@ -101,43 +139,34 @@ export async function initWhatsAppHandlers() {
                 `;
             }
         }, retryDelay);
-    }    
-    
+    } 
 
     function updateChatList() {
         if (!chatList) return;
 
         const chats = whatsAppState.getChats();
-        
-        // Render the chat items
         chatList.innerHTML = chats
-            .map((chat) =>
-                ChatItem({
-                    user: chat.user,
-                    lastMessage: chat.messages[chat.messages.length - 1],
-                    unreadCount: 0,
-                    isActive: chat.id === whatsAppState.selectedChat
-                })
-            )
+            .map(chat => ChatItem({
+                user: chat.user,
+                lastMessage: chat.messages[chat.messages.length - 1],
+                unreadCount: 0,
+                isActive: chat.id === whatsAppState.selectedChat,
+                isBlocked: blockingService.isBlocked(chat.id)
+            }))
             .join('');
 
-        // Add click handlers
-        chatList.querySelectorAll('.chat-item').forEach((item) => {
+        chatList.querySelectorAll('.chat-item').forEach(item => {
             item.addEventListener('click', () => {
                 const chatId = item.dataset.userId;
                 whatsAppState.selectChat(chatId);
-                //console.log('Selected chat:', whatsAppState.getSelectedChat());
             });
         });
     }
 
     function updateChatMessages() {
-
         if (!chatMessages) return;
 
-
         const selectedChat = whatsAppState.getSelectedChat();
-
         if (!selectedChat) {
             chatMessages.innerHTML = `
                 <div class="text-center text-muted p-4">
@@ -147,27 +176,37 @@ export async function initWhatsAppHandlers() {
             return;
         }
 
-        // Render messages
-        chatMessages.innerHTML = selectedChat.messages
-            .map((msg) =>
-                Message({
-                    content: msg.content,
-                    timestamp: msg.timestamp,
-                    isSelf: msg.senderId === 'self',
-                    status: msg.status
-                })
-            )
+        const isBlocked = blockingService.isBlocked(selectedChat.id);
+        let content = '';
+
+        if (isBlocked) {
+            content += `
+                <div class="alert alert-warning text-center m-3">
+                    <i class="bi bi-slash-circle me-2"></i>
+                    You have blocked this user. Unblock to send messages.
+                </div>
+            `;
+        }
+
+        content += selectedChat.messages
+            .map(msg => Message({
+                content: msg.content,
+                timestamp: msg.timestamp,
+                isSelf: msg.senderId === 'self',
+                status: msg.status
+            }))
             .join('');
 
-        // Auto-scroll to bottom
+        chatMessages.innerHTML = content;
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+
+    setInterval(updateChatMessages , 3000);
 
     function updateChatHeader() {
         if (!chatHeader) return;
 
         const selectedChat = whatsAppState.getSelectedChat();
-
         if (!selectedChat) {
             chatHeader.innerHTML = `
                 <div class="text-center text-muted p-3">
@@ -177,33 +216,37 @@ export async function initWhatsAppHandlers() {
             return;
         }
 
+        const isBlocked = blockingService.isBlocked(selectedChat.id);
+        const blockBtnLabel = isBlocked ? 'Unblock User' : 'Block User';
+        const blockBtnIcon = isBlocked ? 'bi-slash-circle-fill' : 'bi-slash-circle';
+
         chatHeader.innerHTML = `
             <div class="d-flex align-items-center p-3">
-                <img
-                    src="${selectedChat.user.avatar}"
-                    class="rounded-circle me-2"
-                    alt="${selectedChat.user.name}"
-                    width="40"
-                    height="40"
-                />
+                <img src="${selectedChat.user.avatar}" 
+                     class="rounded-circle me-2" 
+                     alt="${selectedChat.user.name}"
+                     width="40" height="40">
                 <div>
-                    <h6 class="mb-0">${selectedChat.user.name}</h6>
+                    <h6 class="mb-0">
+                        ${selectedChat.user.name}
+                        ${isBlocked ? '<i class="bi bi-slash-circle text-muted ms-2"></i>' : ''}
+                    </h6>
                     <small class="text-muted">${selectedChat.user.status}</small>
                 </div>
-                <!-- Dropdown aligned to the right (optional) -->
-                <div class="dropdown ms-auto" id="chatActions">
-                    <button 
-                        class="btn btn-light rounded-circle" 
-                        type="button" 
-                        data-bs-toggle="dropdown"
-                    >
+                <div class="dropdown ms-auto">
+                    <button class="btn btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>
+                            <a class="dropdown-item" id="viewProfile" href="#/userprofile?userid=${selectedChat.user.id}">
+                                <i class="bi bi-person-circle me-2"></i>View Profile
+                            </a>
+                        </li>
+                        <li>
                             <button class="dropdown-item" id="toggleBlockBtn">
-                                <i class="bi bi-slash-circle me-2"></i>
-                                <span>Block User</span>
+                                <i class="${blockBtnIcon} me-2"></i>
+                                <span>${blockBtnLabel}</span>
                             </button>
                         </li>
                     </ul>
@@ -216,24 +259,32 @@ export async function initWhatsAppHandlers() {
         if (!messageInput) return;
         
         const content = messageInput.value.trim();
-        
+        const selectedChat = whatsAppState.getSelectedChat();
+
+        if (!selectedChat || blockingService.isBlocked(selectedChat.id)) {
+            return;
+        }
+
         if (content) {
             whatsAppState.sendMessage(content);
             messageInput.value = '';
         }
     }
 
-    function handleSearch(searchTerm) {
-        const items = chatList?.querySelectorAll('.chat-item');
-        if (!items) return;
+    function showBlockingToast(userName, isBlocked) {
+        const toast = document.createElement('div');
+        toast.className = 'toast position-fixed top-0 end-0 m-3';
+        toast.style.zIndex = '1050';
+        
+        toast.innerHTML = `
+            <div class="toast-body d-flex align-items-center ${isBlocked ? 'bg-warning' : 'bg-success'} text-white">
+                <i class="bi ${isBlocked ? 'bi-slash-circle' : 'bi-check-circle'} me-2"></i>
+                ${userName} has been ${isBlocked ? 'blocked' : 'unblocked'}
+            </div>
+        `;
 
-        const term = searchTerm.toLowerCase();
-        items.forEach((item) => {
-            const name = item.querySelector('h6').textContent.toLowerCase();
-            const message = item.querySelector('small').textContent.toLowerCase();
-            const isVisible = name.includes(term) || message.includes(term);
-            item.style.display = isVisible ? 'block' : 'none';
-        });
+        document.body.appendChild(toast);
+        new bootstrap.Toast(toast, { delay: 3000 }).show();
     }
 
     // Event listeners
@@ -243,8 +294,17 @@ export async function initWhatsAppHandlers() {
             handleSendMessage();
         }
     });
+
     searchInput?.addEventListener('input', (e) => {
-        handleSearch(e.target.value);
+        const searchTerm = e.target.value.toLowerCase();
+        const items = chatList?.querySelectorAll('.chat-item');
+        
+        items?.forEach(item => {
+            const name = item.querySelector('h6')?.textContent.toLowerCase() || '';
+            const message = item.querySelector('small')?.textContent.toLowerCase() || '';
+            const isVisible = name.includes(searchTerm) || message.includes(searchTerm);
+            item.style.display = isVisible ? 'block' : 'none';
+        });
     });
 
     // Subscribe to state changes

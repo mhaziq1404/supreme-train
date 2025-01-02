@@ -1,4 +1,5 @@
 import { webSocketService } from '../websocket/WebSocketService.js';
+import { blockingService } from './BlockingService.js';
 
 export class ChatMessageHandler {
     constructor(chatState) {
@@ -25,7 +26,7 @@ export class ChatMessageHandler {
               return;
             }
 
-            console.log('Received message:', rawMessage.message.senderId, this.chatState.userId);
+            //console.log('Received message:', rawMessage.message.senderId, this.chatState.userId);
 
             if (rawMessage.message.senderId == this.chatState.userId) {
                 return;
@@ -68,7 +69,7 @@ export class ChatMessageHandler {
     
       let chat = this.chatState.chats.get(senderId.toString()) || this.chatState.chats.get(senderId) ;
 
-      console.log('Chat:', this.chatState.chats);
+      //console.log('Chat:', this.chatState.chats);
       if (!chat) {
         console.warn(`Chat not found for senderId: ${senderId}, creating a new one.`);
     
@@ -86,8 +87,15 @@ export class ChatMessageHandler {
     
         chat = this.chatState.chats.get(senderId);
       }
+
+      // Check if user is blocked (optional)
+      if (blockingService.isBlocked(senderId.toString())) {
+        //console.log(`Message from blocked user ${senderId} ignored.`);
+        return;
+      }
     
       chat.messages.push(newMessage);
+      this.chatState.savechat();
     
     }
       

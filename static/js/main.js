@@ -1,9 +1,11 @@
 import { Router } from './router/index.js';
 import * as THREE from 'https://unpkg.com/three@latest/build/three.module.js';
+import { initFriendRequestsHandler } from './utils/friends/friendRequestsHandler.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.querySelector('#app');
     new Router(app);
+    initFriendRequestsHandler();
 });
 
 export function displayGameSection() {

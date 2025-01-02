@@ -116,9 +116,6 @@ class SyncChats(APIView):
         token = auth_header.split(' ')[1]
         try:
             user = User.objects.get(auth_token=token)
-            data = request.data
-            data_pretty = json.dumps(data, indent=4)
-            print(data_pretty)
         except User.DoesNotExist:
             raise NotAuthenticated("Invalid token")
 
