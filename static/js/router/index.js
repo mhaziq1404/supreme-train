@@ -3,6 +3,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner.js';
 import { requireAuth } from './guards.js';
 import { TournamentBracketView } from '../views/TournamentBracketView.js';
 import { displayGameSection, hideGameSection } from '../main.js';
+import { GameRoomView } from '../views/GameRoomView.js'
 import { PongGameVSView } from '../views/PongGameVSView.js';
 import { PlayerProfileView } from '../views/PlayerProfileView.js';
 
@@ -51,7 +52,8 @@ export class Router {
             return;
         }
 
-        if (path.startsWith('/game') && !path.startsWith('/game-vs')) {
+        // if (path.startsWith('/game') && !path.startsWith('/game-vs')) {
+        if (path.startsWith('/game')) {
             const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
             let player1 = urlParams.get('player1');
             let player2 = urlParams.get('player2');
@@ -70,18 +72,15 @@ export class Router {
             }
         }
 
-        if (path.startsWith('/game-vs')) {
+        if (path.startsWith('/room')) {
             const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-            const player1 = urlParams.get('player1');
-            const player2 = urlParams.get('player2');
-            const socketuser = urlParams.get('socketuser');
+            let roomid = urlParams.get('roomid');
 
-            if (!(player1 == null || player2 == null)){
+            if (!(roomid == null)){
                 this.root.innerHTML = LoadingSpinner();
                 
                 try {
-                    // Pass the extracted `isTournament` value to PongGameView
-                    const view = await PongGameVSView(player1, player2, socketuser);
+                    const view = await GameRoomView(roomid);
                     this.root.innerHTML = view;
                 } catch (error) {
                     console.error('Route error:', error);
@@ -95,10 +94,35 @@ export class Router {
             }
         }
 
+        // if (path.startsWith('/game-vs')) {
+        //     const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+        //     const player1 = urlParams.get('player1');
+        //     const player2 = urlParams.get('player2');
+        //     const socketuser = urlParams.get('socketuser');
+
+        //     if (!(player1 == null || player2 == null)){
+        //         this.root.innerHTML = LoadingSpinner();
+                
+        //         try {
+        //             // Pass the extracted `isTournament` value to PongGameView
+        //             const view = await PongGameVSView(player1, player2, socketuser);
+        //             this.root.innerHTML = view;
+        //         } catch (error) {
+        //             console.error('Route error:', error);
+        //             this.root.innerHTML = `
+        //                 <div class="alert alert-danger">
+        //                     Error loading game room: ${error.message}
+        //                 </div>
+        //             `;
+        //         }
+        //         return;
+        //     }
+        // }
+
         if (path.startsWith('/tournament/brackets')) {
             const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
             let semi1 = urlParams.get('semi1');
-            let semi2 = urlParams.get('semi1');
+            let semi2 = urlParams.get('semi2');
 
             if (!(semi1 == null)) {
                 document.querySelector('#semi1Winner').textContent = semi1;
@@ -165,7 +189,8 @@ export class Router {
         
         // Show loading spinner
         this.root.innerHTML = LoadingSpinner();
-        if (path.startsWith('/game') && !path.startsWith('/game-vs')) {
+        // if (path.startsWith('/game') && !path.startsWith('/game-vs')) {
+        if (path.startsWith('/game')) {
             displayGameSection();
         } else {
             hideGameSection();

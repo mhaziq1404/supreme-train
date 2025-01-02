@@ -23,12 +23,13 @@ from match_app import routing as match_routing
 from users_app import routing as users_routing
 from chat_app import routing as chat_routing
 from pong_app import routing as pong_routing
+from room_app import routing as room_routing
 
 
 # Combine WebSocket URL patterns from multiple apps
 # websocket_urlpatterns = match_routing.websocket_urlpatterns + users_routing.websocket_urlpatterns
 # websocket_urlpatterns = match_routing.websocket_urlpatterns + users_routing.websocket_urlpatterns + chat_routing.websocket_urlpatterns
-websocket_urlpatterns = match_routing.websocket_urlpatterns + users_routing.websocket_urlpatterns + chat_routing.websocket_urlpatterns + pong_routing.websocket_urlpatterns
+websocket_urlpatterns = match_routing.websocket_urlpatterns + users_routing.websocket_urlpatterns + chat_routing.websocket_urlpatterns + room_routing.websocket_urlpatterns + pong_routing.websocket_urlpatterns
 
 # application = ProtocolTypeRouter({
 #     "http": django_asgi_app,

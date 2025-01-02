@@ -30,6 +30,7 @@ export const routes = {
     '/tournament/brackets': TournamentBracketView,
     '/tournament/podium': TournamentPodiumView,
     '/create-room': CreateRoomView,
+    '/room': GameRoomView,
     '/game-room': GameRoomView,
     '/friends': FriendsView,
     '/404': NotFoundView

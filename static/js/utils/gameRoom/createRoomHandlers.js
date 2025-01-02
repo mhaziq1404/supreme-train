@@ -1,5 +1,14 @@
 import { animate } from '../animation.js';
 import { createRoom } from './createRoomService.js';
+import { authService } from '../../services/api/authService.js';
+
+function formDataToObject(formData) {
+  const obj = {};
+  formData.forEach((value, key) => {
+    obj[key] = value;
+  });
+  return obj;
+}
 
 export function initCreateRoomHandlers() {
   const form = document.getElementById('createRoomForm');
@@ -10,13 +19,24 @@ export function initCreateRoomHandlers() {
     try {
       const formData = new FormData(form);
       const room = await createRoom(formData);
+      const host = await authService.getCurrentUser();
+      const formDataDetail = formDataToObject(formData);
+      const players = { 'players': [
+                {
+                    'name': host.username,
+                    'host': true,
+                    'ready': false
+                }
+            ]};
+      
+      const combinedRoom = { ...room, ...formDataDetail, ...players };
       
       showSuccessMessage();
       
       // Store room data and redirect
-      localStorage.setItem('currentRoom', JSON.stringify(room));
+      localStorage.setItem('currentRoom', JSON.stringify(combinedRoom));
       setTimeout(() => {
-        window.location.hash = `/game-room/${room.id}`;
+        window.location.hash = `/room/?roomid=${host.username}`;
       }, 1000);
 
     } catch (error) {

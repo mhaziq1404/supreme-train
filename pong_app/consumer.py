@@ -34,32 +34,20 @@ class PongConsumer(WebsocketConsumer):
 
             if len(self.players) == 2:
                 self.start_game()
-        else:
-            self.close()
 
     def disconnect(self, close_code):
         if self in self.players:
             self.players.remove(self)
 
     def receive(self, text_data):
-        if not self.game_active:
-            return
-
         data = json.loads(text_data)
-
-        if 'reset' in data:
-            if data['reset'] == 'player1':
-                self.score['player1'] += 1
-            elif data['reset'] == 'player2':
-                self.score['player2'] += 1
-
-            if self.score['player1'] >= 11 or self.score['player2'] >= 11:
-                self.end_game()
-
-            self.broadcast_score()
-
+        
         for player in self.players:
-            player.send(text_data=json.dumps(data))
+            if 'start_game' in data:
+                player.send(text_data=json.dumps(data))
+            else:
+                if (player.user != self.user):
+                    player.send(text_data=json.dumps(data))
 
     def start_game(self):
         self.game_active = True
@@ -72,7 +60,6 @@ class PongConsumer(WebsocketConsumer):
         }
         for player in self.players:
             player.send(text_data=json.dumps({'type': 'start_game', **initial_state}))
-            player.send(text_data=json.dumps({'type': 'state_update', **initial_state}))
 
     def end_game(self):
         self.game_active = False
@@ -91,20 +78,20 @@ class PongConsumer(WebsocketConsumer):
         #     winner_user.wins += 1
         #     winner_user.save()
 
-        game_over_message = {
-            'type': 'game_over',
-            'winner': winner,
-            'player1_score': self.score['player1'],
-            'player2_score': self.score['player2']
-        }
-        for player in self.players:
-            player.send(text_data=json.dumps(game_over_message))
+        # game_over_message = {
+        #     'type': 'game_over',
+        #     'winner': winner,
+        #     'player1_score': self.score['player1'],
+        #     'player2_score': self.score['player2']
+        # }
+        # for player in self.players:
+        #     player.send(text_data=json.dumps(game_over_message))
 
-    def broadcast_score(self):
-        score_update = {
-            'type': 'score_update',
-            'player1_score': self.score['player1'],
-            'player2_score': self.score['player2']
-        }
-        for player in self.players:
-            player.send(text_data=json.dumps(score_update))
+    # def broadcast_score(self):
+    #     score_update = {
+    #         'type': 'score_update',
+    #         'player1_score': self.score['player1'],
+    #         'player2_score': self.score['player2']
+    #     }
+    #     for player in self.players:
+    #         player.send(text_data=json.dumps(score_update))

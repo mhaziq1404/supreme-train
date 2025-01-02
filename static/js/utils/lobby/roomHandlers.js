@@ -10,7 +10,7 @@ export function initRoomHandlers() {
     async function handleJoinRoom(roomId) {
         try {
             await roomService.joinRoom(roomId);
-            window.location.href = '#/game-room';
+            window.location.href = '#/room';
         } catch (error) {
             console.error('Error joining room:', error);
         }
@@ -36,7 +36,7 @@ export function initRoomHandlers() {
 
     quickPlayBtn?.addEventListener('click', () => {
         animate.fadeIn(quickPlayBtn, 100);
-        window.location.href = '#/game-room';
+        window.location.href = '#/room';
     });
 
     refreshRoomsBtn?.addEventListener('click', () => {

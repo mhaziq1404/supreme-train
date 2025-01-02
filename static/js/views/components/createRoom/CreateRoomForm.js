@@ -14,7 +14,6 @@ export function CreateRoomForm() {
                     <div class="card-body p-4">
                         <form id="createRoomForm">
                             ${BasicSettings()}
-                            ${GameSettings()}
                             ${ActionButtons()}
                         </form>
                     </div>

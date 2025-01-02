@@ -7,11 +7,11 @@ export function RoomInfo(room) {
             <div class="card-body">
                 <div class="mb-3">
                     <small class="text-muted">Room Name</small>
-                    <h6>${room.name}</h6>
+                    <h6 id='txtRoomName'>${room.name}</h6>
                 </div>
                 <div class="mb-3">
                     <small class="text-muted">Game Mode</small>
-                    <h6>${room.type}</h6>
+                    <h6 id='txtRoomType'>${room.type}</h6>
                 </div>
                 <div class="mb-3">
                     <small class="text-muted">Players</small>
@@ -32,7 +32,7 @@ function generatePlayersList(players) {
                 ${player.name}
                 ${player.host ? '<span class="badge bg-primary ms-2">Host</span>' : ''}
             </div>
-            <span class="badge bg-${player.ready ? 'success' : 'secondary'} rounded-pill">
+            <span style="display:none" class="badge bg-${player.ready ? 'success' : 'secondary'} rounded-pill">
                 ${player.ready ? 'Ready' : 'Not Ready'}
             </span>
         </div>
