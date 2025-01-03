@@ -325,11 +325,11 @@ const initContract = async () => {
         const updateResponse = await fetch('http://base:8000/api/matches/update-contract-address', {
           method: 'POST',
           headers: {
-        'Content-Type': 'application/json',
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ address }),
         });
-
+      
         if (!updateResponse.ok) {
           console.error("Failed to update contract address");
         } else {

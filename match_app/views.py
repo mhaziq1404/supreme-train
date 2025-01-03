@@ -6,10 +6,12 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import NotAuthenticated
 from django.http import JsonResponse
 from .models import Web3_model
+from django.views.decorators.csrf import csrf_exempt
 from web3 import Web3
 import os
 import requests
 import datetime
+import json
 
 User = get_user_model()
 
@@ -224,17 +226,26 @@ def get_contract_address_base(request):
         return JsonResponse({'status': 'failed', 'message': 'No contract address found.'})
 
 
+@csrf_exempt
 def update_contract_address_base(request):
     """
     Update or create the Web3 contract address.
 
-    Expected POST data:
+    Expected JSON POST data:
     {
         "address": "<new_contract_address>"
     }
     """
     if request.method == 'POST':
-        new_address = request.POST.get('address')  # Or request.data.get('address') if using DRF
+        try:
+            # Parse JSON from request body
+            data = json.loads(request.body)
+            new_address = data.get('address')
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {'status': 'error', 'message': 'Invalid JSON in request body.'},
+                status=400
+            )
 
         if not new_address:
             return JsonResponse(
@@ -244,13 +255,18 @@ def update_contract_address_base(request):
 
         web3_address = Web3_model.objects.first()
         if web3_address:
+            # Update existing address
             web3_address.address = new_address
             web3_address.save()
-            return JsonResponse({'status': 'success', 'message': 'Contract address updated.'})
+            return JsonResponse(
+                {'status': 'success', 'message': 'Contract address updated.'}
+            )
         else:
+            # Create a new record if none exists
             Web3_model.objects.create(address=new_address)
-            return JsonResponse({'status': 'success', 'message': 'New contract address created.'})
-
+            return JsonResponse(
+                {'status': 'success', 'message': 'New contract address created.'}
+            )
     else:
         return JsonResponse(
             {'status': 'error', 'message': 'Method not allowed. Use POST.'},
