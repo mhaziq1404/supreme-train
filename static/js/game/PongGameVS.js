@@ -163,8 +163,8 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
     }
 
     function updateScore(player) {
-        if (player === 1) state.scores.player1 += 6;
-        else state.scores.player2 += 6;
+        if (player === 1) state.scores.player1 += 1;
+        else state.scores.player2 += 1;
 
         document.getElementById('vsplayer1Score').textContent = state.scores.player1;
         document.getElementById('vsplayer2Score').textContent = state.scores.player2;
