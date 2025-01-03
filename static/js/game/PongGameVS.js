@@ -168,12 +168,13 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
 
         document.getElementById('vsplayer1Score').textContent = state.scores.player1;
         document.getElementById('vsplayer2Score').textContent = state.scores.player2;
-        const gamestate = {
-            scores: { player1: state.scores.player1, player2: state.scores.player2 },
-            type: 'score_update'
-        };
-        if (socketuser == player1)
+        if (socketuser == player1) {
+            const gamestate = {
+                scores: { player1: state.scores.player1, player2: state.scores.player2 },
+                type: 'score_update'
+            };
             socket.send(JSON.stringify(gamestate));
+        }
 
         if (state.scores.player1 >= 11 || state.scores.player2 >= 11) {
             endGame();
@@ -257,6 +258,12 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
 
         message.textContent = `${winner} Wins!`;
         overlay.style.display = 'flex';
+        if (socketuser == player1) {
+            const endgame = {
+                type: 'end_game'
+            };
+            socket.send(JSON.stringify(endgame));
+        }
     }
 
     function handleInput() {

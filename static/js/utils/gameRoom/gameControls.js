@@ -25,7 +25,7 @@ export function initGameControls(room, join) {
             type: 'game_start'
         };
         socket.send(JSON.stringify(data));
-        initPongGameVS('1','2','1');
+        initPongGameVS(room.players[0].name,room.players[1].name,room.players[0].name);
         const isReady = startBtn.classList.contains('btn-success');
         startBtn.classList.toggle('btn-success');
         startBtn.classList.toggle('btn-light');
@@ -63,24 +63,32 @@ export function initGameControls(room, join) {
                 type:  'player_update'
             };
             socket.send(JSON.stringify(data2));
+        } else if (join == 'host'){
+            console.log(join);
+            console.log(join);
+            const data3 = {
+                room_data: room,
+                type:  'is_host'
+            };
+            socket.send(JSON.stringify(data3));
         }
-        const data = {
-            room_data: room,
-            type: 'update_list'
-        };
-        socket.send(JSON.stringify(data));
+        // const data = {
+        //     room_data: room,
+        //     type: 'update_list'
+        // };
+        // socket.send(JSON.stringify(data));
     };
                 
     socket.onmessage = function(e) {
         try {
             const data = JSON.parse(e.data);
             console.log(data);
-            if (data.type === 'update_list') {
-                // room = data.room_data;
+            if (data.type === 'game_start') {
+                initPongGameVS(data.room_data.players[0].name,data.room_data.players[1].name,room_data.players[1].name);
                 updateRoomInfo(room);
-            } else if (data.type === 'game_start') {
-                initPongGameVS('1','2','2');
-                updateRoomInfo(room);
+            } else if (data.type === 'kick_all') {
+                socket.close();
+                window.location.href = '#/'
             } else if (data.type === 'host_update') {
                 if (join == 'player') {
                     room = data.room_data;
