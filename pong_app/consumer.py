@@ -5,6 +5,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 import jwt
 from django.contrib.auth import get_user_model
+import requests
 
 User = get_user_model()
 

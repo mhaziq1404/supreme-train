@@ -14,7 +14,12 @@ export const friendService = {
         return await apiGet(`${API_CONFIG.ENDPOINTS.USERS}/friends`);
     },
 
+
     async getFriendRequests() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return;
+        }
         return await apiGet(`${API_CONFIG.ENDPOINTS.USERS}/friends/requests`);
     }
 };

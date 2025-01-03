@@ -293,7 +293,7 @@ const initContract = async () => {
 
     while (!response) {
       try {
-        response = await fetch('http://base:8000/api/blockchain/get-contract-address');
+        response = await fetch('http://base:8000/api/matches/get-contract-address');
         if (response.ok) {
           const data = await response.json();
           console.log(data);
@@ -322,7 +322,7 @@ const initContract = async () => {
 
       // POST the address to the specified endpoint
       try {
-        const updateResponse = await fetch('http://base:8000/api/blockchain/update-contract-address', {
+        const updateResponse = await fetch('http://base:8000/api/matches/update-contract-address', {
           method: 'POST',
           headers: {
         'Content-Type': 'application/json',

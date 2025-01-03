@@ -24,41 +24,92 @@ export async function initWhatsAppHandlers() {
         // Handle block toggling
         const blockBtn = e.target.closest('#toggleBlockBtn');
         if (blockBtn && !blockBtn.disabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          // Disable the button so it doesn't run again
-          blockBtn.disabled = true;
-      
-          const selectedChat = whatsAppState.getSelectedChat();
-          if (selectedChat) {
-            //console.log('Toggle block for:', selectedChat.id);
-            const isNowBlocked = blockingService.toggleBlock(selectedChat.id);
-            updateChatHeader();
-            //console.log('User is now blocked:', isNowBlocked);
-            showBlockingToast(selectedChat.user.name, isNowBlocked);
-            setTimeout(() => {
-                blockBtn.disabled = false;
-            }, 2000);
-          }
+            e.preventDefault();
+            e.stopPropagation();
+            // Disable the button so it doesn't run again
+            blockBtn.disabled = true;
+
+            const selectedChat = whatsAppState.getSelectedChat();
+            if (selectedChat) {
+                //console.log('Toggle block for:', selectedChat.id);
+                const isNowBlocked = blockingService.toggleBlock(selectedChat.id);
+                updateChatHeader();
+                //console.log('User is now blocked:', isNowBlocked);
+                showBlockingToast(selectedChat.user.name, isNowBlocked);
+                setTimeout(() => {
+                    blockBtn.disabled = false;
+                }, 2000);
+            }
         }
-      
+
         // Handle new chat messages
         const messageBtn = e.target.closest('[data-message-user]');
         if (messageBtn) {
-          e.preventDefault();
-          e.stopPropagation();
-          messageBtn.disabled = true;
-      
-          const userId = messageBtn.dataset.messageUser;
-          const userName = messageBtn.dataset.userName;
-          console.log('Start chat with:', userId, userName);
-          startNewChat(userId, userName);
-          setTimeout(() => {
-            messageBtn.disabled = false;
-          }, 2000);
+            e.preventDefault();
+            e.stopPropagation();
+            messageBtn.disabled = true;
+
+            const userId = messageBtn.dataset.messageUser;
+            const userName = messageBtn.dataset.userName;
+            console.log('Start chat with:', userId, userName);
+            startNewChat(userId, userName);
+            setTimeout(() => {
+                messageBtn.disabled = false;
+            }, 2000);
         }
-      });
-      
+
+        // Handle new chat messages
+        const roomMessageBtn = e.target.closest('[data-message-user-room]');
+        if (roomMessageBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            roomMessageBtn.disabled = true;
+
+            const userId = roomMessageBtn.dataset.messageUserRoom;
+            const userName = roomMessageBtn.dataset.userNameRoom;
+            console.log('Start chat with:', userId, userName);
+
+            const currentRoomString = localStorage.getItem("currentRoom");
+
+            let gameData = {};
+
+            if (currentRoomString) {
+                try {
+                    const currentRoom = JSON.parse(currentRoomString);
+                    const hostPlayer = currentRoom.players.find((player) => player.host === true);
+
+                    // Now populate gameData using the parsed room data
+                    gameData = {
+                        gameType: currentRoom.type,
+                        gameId: hostPlayer ? hostPlayer.name : "NoHostFound",
+
+                        // roomName: currentRoom.name,
+                        // maxPlayers: currentRoom.maxPlayers,
+                        // // Optionally keep the players array if needed:
+                        // players: currentRoom.players,
+                    };
+
+                    console.log("Populated gameData:", gameData);
+                } catch (error) {
+                    console.error("Error parsing CurrentRoom from localStorage:", error);
+                }
+            } else {
+                console.warn("No CurrentRoom found in localStorage.");
+            }
+
+            startNewChat(userId, userName);
+            if (whatsAppState.getChat(userId)) {
+                whatsAppState.selectChat(userId);
+            } else {
+                whatsAppState.addNewChat(userId, userName);
+            }
+            whatsAppState.sendMessage("room invite", 'game-invitation', gameData);
+            setTimeout(() => {
+                roomMessageBtn.disabled = false;
+            }, 2000);
+        }
+    });
+
 
     function startNewChat(userId, userName) {
         if (whatsAppState.getChat(userId)) {
@@ -66,26 +117,26 @@ export async function initWhatsAppHandlers() {
         } else {
             whatsAppState.addNewChat(userId, userName);
         }
-    
+
         window.location.hash = '#/whatsapp';
-    
+
         let attemptCount = 0;
         const maxAttempts = 10;
         const retryDelay = 300;
-    
+
         const intervalId = setInterval(() => {
             const chatHeader = document.querySelector('.chat-header');
             attemptCount++;
-    
+
             // Once we find the element or exceed max attempts, clear the interval
             if (chatHeader || attemptCount >= maxAttempts) {
                 clearInterval(intervalId);
-    
+
                 if (!chatHeader) {
                     console.warn('Chat header not found after max attempts');
                     return;
                 }
-    
+
                 // If we do find the chatHeader, update it
                 const selectedChat = whatsAppState.getSelectedChat();
                 if (!selectedChat || !selectedChat.user) {
@@ -96,7 +147,7 @@ export async function initWhatsAppHandlers() {
                     `;
                     return;
                 }
-    
+
                 // Note: The "Block/Unblock User" text is handled in updateChatHeader()
                 // but we can also handle it here if you prefer.
                 chatHeader.innerHTML = `
@@ -139,7 +190,7 @@ export async function initWhatsAppHandlers() {
                 `;
             }
         }, retryDelay);
-    } 
+    }
 
     function updateChatList() {
         if (!chatList) return;
@@ -193,7 +244,9 @@ export async function initWhatsAppHandlers() {
                 content: msg.content,
                 timestamp: msg.timestamp,
                 isSelf: msg.senderId === 'self',
-                status: msg.status
+                status: msg.status,
+                type: msg.type,
+                gameData: msg.gameData,
             }))
             .join('');
 
@@ -201,7 +254,7 @@ export async function initWhatsAppHandlers() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    setInterval(updateChatMessages , 3000);
+    setInterval(updateChatMessages, 3000);
 
     function updateChatHeader() {
         if (!chatHeader) return;
@@ -257,7 +310,7 @@ export async function initWhatsAppHandlers() {
 
     function handleSendMessage() {
         if (!messageInput) return;
-        
+
         const content = messageInput.value.trim();
         const selectedChat = whatsAppState.getSelectedChat();
 
@@ -266,7 +319,7 @@ export async function initWhatsAppHandlers() {
         }
 
         if (content) {
-            whatsAppState.sendMessage(content);
+            whatsAppState.sendMessage(content, 'text', null);
             messageInput.value = '';
         }
     }
@@ -275,7 +328,7 @@ export async function initWhatsAppHandlers() {
         const toast = document.createElement('div');
         toast.className = 'toast position-fixed top-0 end-0 m-3';
         toast.style.zIndex = '1050';
-        
+
         toast.innerHTML = `
             <div class="toast-body d-flex align-items-center ${isBlocked ? 'bg-warning' : 'bg-success'} text-white">
                 <i class="bi ${isBlocked ? 'bi-slash-circle' : 'bi-check-circle'} me-2"></i>
@@ -298,7 +351,7 @@ export async function initWhatsAppHandlers() {
     searchInput?.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const items = chatList?.querySelectorAll('.chat-item');
-        
+
         items?.forEach(item => {
             const name = item.querySelector('h6')?.textContent.toLowerCase() || '';
             const message = item.querySelector('small')?.textContent.toLowerCase() || '';

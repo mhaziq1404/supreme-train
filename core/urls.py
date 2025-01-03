@@ -23,7 +23,6 @@ urlpatterns = [
     path('api/rooms/', include('room_app.urls')),
     path('api/chat/', include('chat_app.urls')),
     path('api/matches/', include('match_app.urls')),
-    path('api/blockchain/', include('blockchain_app.urls')),
     path('admin/', admin.site.urls),
     path('', include('spa.urls')),
     path("prometheus/", include("django_prometheus.urls")),

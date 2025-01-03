@@ -68,7 +68,6 @@ export class WhatsAppState {
 
     this.selectedChat = userId;
     this.savechat();
-    console.log(`Created new chat with userId: ${userId}`);
   }
 
   notify() {
@@ -81,7 +80,7 @@ export class WhatsAppState {
     this.notify();
   }
 
-  async sendMessage(content) {
+  async sendMessage(content, type, gameData) {
     if (!this.selectedChat || !content.trim()) return null;
 
     const chat = Array.from(this.chats.values()).find(chat => chat.id === this.selectedChat);
@@ -94,7 +93,9 @@ export class WhatsAppState {
       content: content.trim(),
       timestamp: new Date().toISOString(),
       senderId: 'self',
-      status: 'sent'
+      status: 'sent',
+      type: type,
+      gameData: gameData || null
     };
 
     chat.messages.push(message);
@@ -103,7 +104,7 @@ export class WhatsAppState {
     // this.syncWithBackend();
         
     const recipientId = chat.user.id;
-    this.messageHandler.sendMessage(recipientId, content);
+    this.messageHandler.sendMessage(recipientId, content, type, gameData);
 
     this.savechat();
 

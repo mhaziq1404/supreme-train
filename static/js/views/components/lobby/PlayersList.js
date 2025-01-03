@@ -52,43 +52,47 @@ function generatePlayersList(players) {
             (player) => `
         <div class="list-group-item">
             <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <div class="position-relative">
-                        <img 
-                            src="${player.avatar || 'https://via.placeholder.com/32'}"
-                            class="rounded-circle"
-                            alt="${player.name}"
-                            width="32"
-                            height="32"
-                        />
-                        <span
-                            class="position-absolute bottom-0 end-0 bg-${
-                                player.status === 'Online' ? 'success' : 'warning'
-                            } rounded-circle"
-                            style="width: 8px; height: 8px;"
-                        ></span>
-                    </div>
-                    <div class="ms-2">
-                        <div class="mb-0 fw-semibold">${player.name}</div>
-                        <small class="text-muted">${player.rank} • ${player.elo} ELO</small>
-                    </div>
+            <div class="d-flex align-items-center">
+                <div class="position-relative">
+                <img 
+                    src="${player.avatar || 'https://via.placeholder.com/32'}"
+                    class="rounded-circle"
+                    alt="${player.name}"
+                    width="32"
+                    height="32"
+                />
+                <span
+                    class="position-absolute bottom-0 end-0 bg-${player.status === 'Online' ? 'success' : 'warning'
+                } rounded-circle"
+                    style="width: 8px; height: 8px;"
+                ></span>
                 </div>
-                <div class="dropdown">
-                    <button data-add-friend="${player.id}" class="btn btn-light btn-sm">
-                        <i class="bi bi-person-plus"></i>
-                    </button>
-                    <button class="btn btn-light btn-sm"
-                        data-message-user="${player.id}"
-                        data-user-name="${player.name}">
-                        <i class="bi bi-chat-dots"></i>
-                    </button>
-                    <button class="btn btn-light btn-sm">
-                        <i class="bi bi-controller"></i>
-                    </button>
+                <div class="ms-2">
+                <div class="mb-0 fw-semibold">${player.name}</div>
+                <small class="text-muted">${player.rank} • ${player.elo} ELO</small>
                 </div>
             </div>
+            <div class="dropdown">
+                <button data-add-friend="${player.id}" class="btn btn-light btn-sm">
+                <i class="bi bi-person-plus"></i>
+                </button>
+                    <button class="btn btn-light btn-sm"
+                    data-message-user="${player.id}"
+                    data-user-name="${player.name}">
+                    <i class="bi bi-chat-dots"></i>
+                </button>
+                ${window.location.hash.includes('#/room')
+                    ? `<button class="btn btn-light btn-sm"
+                    data-message-user-room="${player.id}"
+                    data-user-name-room="${player.name}">
+                    <i class="bi bi-controller"></i>
+                    </button>`
+                    : ''
+                }
+            </div>
+            </div>
         </div>
-    `
+        `
         )
         .join('');
 }
