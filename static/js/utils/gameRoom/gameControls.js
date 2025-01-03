@@ -84,7 +84,7 @@ export function initGameControls(room, join) {
             const data = JSON.parse(e.data);
             console.log(data);
             if (data.type === 'game_start') {
-                initPongGameVS(data.room_data.players[0].name,data.room_data.players[1].name,room_data.players[1].name);
+                initPongGameVS(data.room_data.players[0].name,data.room_data.players[1].name,data.room_data.players[1].name);
                 updateRoomInfo(room);
             } else if (data.type === 'kick_all') {
                 socket.close();
