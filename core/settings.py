@@ -224,8 +224,13 @@ USE_TZ = True
 
 # Make sure STATIC_URL is defined (it usually is by default)
 STATIC_URL = '/static/'
+MEDIA_URL = '/static/images/'
 
-MEDIA_ROOT = BASE_DIR
+STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+]
+
+MEDIA_ROOT = BASE_DIR / 'static/images'
 
 # If you want to serve static files locally in development:
 import os
