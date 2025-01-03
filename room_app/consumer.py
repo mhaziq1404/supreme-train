@@ -10,6 +10,7 @@ User = get_user_model()
 
 class RoomConsumer(WebsocketConsumer):
     players = []
+    isHost = False
 
     def connect(self):
         self.user = self.scope['user']
@@ -17,6 +18,7 @@ class RoomConsumer(WebsocketConsumer):
         self.accept()
 
     def disconnect(self, close_code):
+        self.players.remove(self)
         return
 
     def receive(self, text_data):
@@ -24,21 +26,13 @@ class RoomConsumer(WebsocketConsumer):
         #     return
         data = json.loads(text_data)
 
-        # if 'host_update' in data:
-        #     self.room.id = data['room_data']['id']
-        #     self.room.name = data['room_data']['name']
-        #     self.room.type = data['room_data']['type']
-        #     self.room.players = data['room_data']['players']
-
-        # if 'player_update' in data:
-        #     new_players = data['room_data']['players']
-        #     self.room.players.append(new_player)
-
-        # data['room_data'] = self.room
+        if data.get('type') == 'is_host':
+            self.isHost = True
+            return
 
         for player in self.players:
             if 'update_list' in data:
-                player.send(text_data=json.dumps(data))
+                player.send(text_data=json.dumps({**data, 'isHost': self.isHost}))
             else:
                 if (player.user != self.user):
-                    player.send(text_data=json.dumps(data))
+                    player.send(text_data=json.dumps({**data, 'isHost': self.isHost}))

@@ -168,16 +168,17 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
 
         document.getElementById('vsplayer1Score').textContent = state.scores.player1;
         document.getElementById('vsplayer2Score').textContent = state.scores.player2;
-        const gamestate = {
-            scores: { player1: state.scores.player1, player2: state.scores.player2 },
-            type: 'score_update'
-        };
-        if (socketuser == player1)
+        if (socketuser == player1) {
+            const gamestate = {
+                scores: { player1: state.scores.player1, player2: state.scores.player2 },
+                type: 'score_update'
+            };
             socket.send(JSON.stringify(gamestate));
+        }
 
         if (state.scores.player1 >= 11 || state.scores.player2 >= 11) {
             endGame();
-        } else {
+        } else if (socketuser == player1) {
             resetBall(player);
         }
     }
@@ -185,60 +186,60 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
     function updateBall() {
         if (state.gameOver)
             return ;
-        if (socketuser != player1)
-            return ;
-        ball.position.x += state.ballSpeed.x;
-        ball.position.y += state.ballSpeed.y;
-        const gamestateball = {
-            ball: { x: ball.position.x, y: ball.position.y },
-            ballSpeed: { x: state.ballSpeed.x, y: state.ballSpeed.y },
-            type: 'ball_update'
-        };
-        socket.send(JSON.stringify(gamestateball));
-
-        // Wall collisions
-        if (ball.position.y >= 2.85 || ball.position.y <= -2.85) {
-            if (ball.position.y >= 2.85)
-                ball.position.y = 2.85;
-            if (ball.position.y <= -2.85)
-                ball.position.y = -2.85;
-            state.ballSpeed.y *= -1;
+        if (socketuser == player1) {
             ball.position.x += state.ballSpeed.x;
             ball.position.y += state.ballSpeed.y;
-            const gamestatewall = {
+            const gamestateball = {
                 ball: { x: ball.position.x, y: ball.position.y },
                 ballSpeed: { x: state.ballSpeed.x, y: state.ballSpeed.y },
                 type: 'ball_update'
             };
-            socket.send(JSON.stringify(gamestatewall));
-        }
+            socket.send(JSON.stringify(gamestateball));
 
-        // Paddle collisions
-        if (ball.position.x <= -6.85 && ball.position.x >= -7.0) {
-            if (ball.position.y <= paddle1.position.y + 1 &&
-                ball.position.y >= paddle1.position.y - 1) {
-                state.ballSpeed.x *= -1; // Increase speed slightly
-                state.ballSpeed.y = (ball.position.y - paddle1.position.y) * 0.5; // Add spin
-                const gamestatepaddle1 = {
+            // Wall collisions
+            if (ball.position.y >= 2.85 || ball.position.y <= -2.85) {
+                if (ball.position.y >= 2.85)
+                    ball.position.y = 2.85;
+                if (ball.position.y <= -2.85)
+                    ball.position.y = -2.85;
+                state.ballSpeed.y *= -1;
+                ball.position.x += state.ballSpeed.x;
+                ball.position.y += state.ballSpeed.y;
+                const gamestatewall = {
                     ball: { x: ball.position.x, y: ball.position.y },
                     ballSpeed: { x: state.ballSpeed.x, y: state.ballSpeed.y },
                     type: 'ball_update'
                 };
-                socket.send(JSON.stringify(gamestatepaddle1));
+                socket.send(JSON.stringify(gamestatewall));
             }
-        }
 
-        if (ball.position.x >= 6.85 && ball.position.x <= 7.0) {
-            if (ball.position.y <= paddle2.position.y + 1 &&
-                ball.position.y >= paddle2.position.y - 1) {
-                state.ballSpeed.x *= -1; // Increase speed slightly
-                state.ballSpeed.y = (ball.position.y - paddle2.position.y) * 0.5; // Add spin
-                const gamestatepaddle2 = {
-                    ball: { x: ball.position.x, y: ball.position.y },
-                    ballSpeed: { x: state.ballSpeed.x, y: state.ballSpeed.y },
-                    type: 'ball_update'
+            // Paddle collisions
+            if (ball.position.x <= -6.85 && ball.position.x >= -7.0) {
+                if (ball.position.y <= paddle1.position.y + 1 &&
+                    ball.position.y >= paddle1.position.y - 1) {
+                    state.ballSpeed.x *= -1; // Increase speed slightly
+                    state.ballSpeed.y = (ball.position.y - paddle1.position.y) * 0.5; // Add spin
+                    const gamestatepaddle1 = {
+                        ball: { x: ball.position.x, y: ball.position.y },
+                        ballSpeed: { x: state.ballSpeed.x, y: state.ballSpeed.y },
+                        type: 'ball_update'
+                    };
+                    socket.send(JSON.stringify(gamestatepaddle1));
                 }
-                socket.send(JSON.stringify(gamestatepaddle2));
+            }
+
+            if (ball.position.x >= 6.85 && ball.position.x <= 7.0) {
+                if (ball.position.y <= paddle2.position.y + 1 &&
+                    ball.position.y >= paddle2.position.y - 1) {
+                    state.ballSpeed.x *= -1; // Increase speed slightly
+                    state.ballSpeed.y = (ball.position.y - paddle2.position.y) * 0.5; // Add spin
+                    const gamestatepaddle2 = {
+                        ball: { x: ball.position.x, y: ball.position.y },
+                        ballSpeed: { x: state.ballSpeed.x, y: state.ballSpeed.y },
+                        type: 'ball_update'
+                    }
+                    socket.send(JSON.stringify(gamestatepaddle2));
+                }
             }
         }
 
@@ -257,6 +258,12 @@ export function initPongGameVS(player1 = null, player2 = null, socketuser = null
 
         message.textContent = `${winner} Wins!`;
         overlay.style.display = 'flex';
+        if (socketuser == player1) {
+            const endgame = {
+                type: 'end_game'
+            };
+            socket.send(JSON.stringify(endgame));
+        }
     }
 
     function handleInput() {

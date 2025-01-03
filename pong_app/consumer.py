@@ -42,6 +42,10 @@ class PongConsumer(WebsocketConsumer):
 
     def receive(self, text_data):
         data = json.loads(text_data)
+
+        if data.get('type') == 'end_game':
+            self.end_game()
+            return
         
         for player in self.players:
             if 'start_game' in data:
@@ -65,7 +69,20 @@ class PongConsumer(WebsocketConsumer):
     def end_game(self):
         self.game_active = False
         winner = PongConsumer.player1_name if self.score['player1'] > self.score['player2'] else PongConsumer.player2_name
-
+        print(winner)
+        print(self.game_active)
+        url = "http://thirdweb:3333/store_results"
+        payload = json.dumps({
+            "id": match_id, 
+            "player1": PongConsumer.player1_name,
+            "player2": PongConsumer.player2_name,
+            "score1": self.score['player1'],
+            "score2": self.score['player2'],
+            "winner": winner
+        })
+        print(payload)
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(url, headers=headers, data=payload)
         # if self.user.username == winner:
         #     self.user.wins += 1
         #     self.user.save()

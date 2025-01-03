@@ -6,6 +6,8 @@ export function initGameControls(room, join) {
     const readyBtn = document.getElementById('readyBtn');
     const startBtn = document.getElementById('startBtn');
     const leaveRoom = document.getElementById('leaveRoom');
+    if (join == 'host')
+        readyBtn.style.display = 'none';
 
     readyBtn?.addEventListener('click', () => {
         const isReady = readyBtn.classList.contains('btn-success');
@@ -25,7 +27,7 @@ export function initGameControls(room, join) {
             type: 'game_start'
         };
         socket.send(JSON.stringify(data));
-        initPongGameVS('1','2','1');
+        initPongGameVS(room.players[0].name,room.players[1].name,room.players[0].name);
         const isReady = startBtn.classList.contains('btn-success');
         startBtn.classList.toggle('btn-success');
         startBtn.classList.toggle('btn-light');
@@ -63,23 +65,35 @@ export function initGameControls(room, join) {
                 type:  'player_update'
             };
             socket.send(JSON.stringify(data2));
+        } else if (join == 'host'){
+            console.log(join);
+            console.log(join);
+            const data3 = {
+                room_data: room,
+                type:  'is_host'
+            };
+            socket.send(JSON.stringify(data3));
         }
-        const data = {
-            room_data: room,
-            type: 'update_list'
-        };
-        socket.send(JSON.stringify(data));
+        // const data = {
+        //     room_data: room,
+        //     type: 'update_list'
+        // };
+        // socket.send(JSON.stringify(data));
     };
                 
     socket.onmessage = function(e) {
         try {
             const data = JSON.parse(e.data);
             console.log(data);
-            if (data.type === 'update_list') {
-                // room = data.room_data;
-                updateRoomInfo(room);
-            } else if (data.type === 'game_start') {
-                initPongGameVS('1','2','2');
+            if (data.isHost == false) {
+                if (join != 'host') {
+                    socket.close();
+                    window.location.href = '#/';
+                }
+            }
+
+            if (data.type === 'game_start') {
+                initPongGameVS(data.room_data.players[0].name,data.room_data.players[1].name,data.room_data.players[1].name);
                 updateRoomInfo(room);
             } else if (data.type === 'host_update') {
                 if (join == 'player') {
@@ -102,7 +116,8 @@ export function initGameControls(room, join) {
                 readyBtn.style.display = 'none';
                 startBtn.style.display = 'block';
             } else if (data.type === 'not_ready') {
-                readyBtn.style.display = 'block';
+                if (join != 'host')
+                    readyBtn.style.display = 'block';
                 startBtn.style.display = 'none';
             } else {
                 console.error("Unexpected message type", data.type);
