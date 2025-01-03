@@ -18,6 +18,7 @@ class RoomConsumer(WebsocketConsumer):
         self.accept()
 
     def disconnect(self, close_code):
+        self.players.remove(self)
         return
 
     def receive(self, text_data):
@@ -25,18 +26,13 @@ class RoomConsumer(WebsocketConsumer):
         #     return
         data = json.loads(text_data)
 
-        if 'is_host' in data:
+        if data.get('type') == 'is_host':
             self.isHost = True
             return
 
-        # if not self.isHost:
-        #     for player in self.players:
-        #         player.send(text_data=json.dumps({'type': 'kick_all'}))
-        #     return
-
         for player in self.players:
             if 'update_list' in data:
-                player.send(text_data=json.dumps(data))
+                player.send(text_data=json.dumps({**data, 'isHost': self.isHost}))
             else:
                 if (player.user != self.user):
-                    player.send(text_data=json.dumps(data))
+                    player.send(text_data=json.dumps({**data, 'isHost': self.isHost}))

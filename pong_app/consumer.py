@@ -42,7 +42,7 @@ class PongConsumer(WebsocketConsumer):
     def receive(self, text_data):
         data = json.loads(text_data)
 
-        if 'end_game' in data:
+        if data.get('type') == 'end_game':
             self.end_game()
             return
         

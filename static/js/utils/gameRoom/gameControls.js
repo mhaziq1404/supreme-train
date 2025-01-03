@@ -6,6 +6,8 @@ export function initGameControls(room, join) {
     const readyBtn = document.getElementById('readyBtn');
     const startBtn = document.getElementById('startBtn');
     const leaveRoom = document.getElementById('leaveRoom');
+    if (join == 'host')
+        readyBtn.style.display = 'none';
 
     readyBtn?.addEventListener('click', () => {
         const isReady = readyBtn.classList.contains('btn-success');
@@ -83,12 +85,16 @@ export function initGameControls(room, join) {
         try {
             const data = JSON.parse(e.data);
             console.log(data);
+            if (data.isHost == false) {
+                if (join != 'host') {
+                    socket.close();
+                    window.location.href = '#/';
+                }
+            }
+
             if (data.type === 'game_start') {
                 initPongGameVS(data.room_data.players[0].name,data.room_data.players[1].name,data.room_data.players[1].name);
                 updateRoomInfo(room);
-            } else if (data.type === 'kick_all') {
-                socket.close();
-                window.location.href = '#/'
             } else if (data.type === 'host_update') {
                 if (join == 'player') {
                     room = data.room_data;
@@ -110,7 +116,8 @@ export function initGameControls(room, join) {
                 readyBtn.style.display = 'none';
                 startBtn.style.display = 'block';
             } else if (data.type === 'not_ready') {
-                readyBtn.style.display = 'block';
+                if (join != 'host')
+                    readyBtn.style.display = 'block';
                 startBtn.style.display = 'none';
             } else {
                 console.error("Unexpected message type", data.type);
