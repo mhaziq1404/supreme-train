@@ -29,7 +29,7 @@ export function initCreateRoomHandlers() {
                 }
             ]};
       
-      const combinedRoom = { ...room, ...formDataDetail, ...players };
+      const combinedRoom = { 'roomid': host.username, ...formDataDetail, ...players };
       
       showSuccessMessage();
       

@@ -28,7 +28,7 @@ export async function GameRoomView(host = 0) {
         if (user.username != host) {
             join = 'player';
             room = {
-                'id': 0,
+                'id': host,
                 'name': 'Retrieving',
                 'type': 'Retrieving',
                 'players': [
